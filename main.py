@@ -24,7 +24,7 @@ from sensor_msgs.msg import PointCloud2, PointField
 # from sensor_msgs_py import point_cloud2
 import time
 data_path = '/home/xzb/ros2-project/kitti2ros2bag/src/kitti2ros2bag/datasets/2011_09_26_drive_0001_sync/2011_09_26/2011_09_26_drive_0001_sync/'
-data_path ='/home/xzb/ros2-project/kitti2ros2bag/src/kitti2ros2bag/datasets/2011_09_26_drive_0019_sync/2011_09_26/2011_09_26_drive_0019_sync/'
+data_path ='/home/xzb/ros2-project/datasets/2011_09_26_drive_0019_sync/2011_09_26/2011_09_26_drive_0019_sync/'
 
 imu_topic = 'kitti/imu'
 imu_dir = 'oxts/data/'
