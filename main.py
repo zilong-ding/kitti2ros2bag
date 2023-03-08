@@ -10,7 +10,10 @@ except ImportError as e:
 
 import rclpy
 from rclpy.node import Node
-import ros2bag
+# import ros2bag
+# import rosbag2_transport
+# import rosbag2_storage_mcap_test_fixture_interfaces
+
 import cv2
 import os
 import numpy as np
@@ -23,10 +26,16 @@ from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import PointCloud2, PointField
 # from sensor_msgs_py import point_cloud2
 import time
+import tf2_ros
+import tf2_py as tf2
+import tf2_tools
+import tf2_msgs
+import transforms3d
+import tf_transformations
 data_path = '/home/xzb/ros2-project/kitti2ros2bag/src/kitti2ros2bag/datasets/2011_09_26_drive_0001_sync/2011_09_26/2011_09_26_drive_0001_sync/'
 data_path ='/home/xzb/ros2-project/datasets/2011_09_26_drive_0019_sync/2011_09_26/2011_09_26_drive_0019_sync/'
 
-imu_topic = 'kitti/imu'
+imu_topic = '/kitti/imu'
 imu_dir = 'oxts/data/'
 imu_timestamps = 'oxts/timestamps.txt'
 
@@ -79,12 +88,22 @@ class kitti2bag2(Node):
         imu_msg = Imu()
         imu_msg.header = Header()
         imu_msg.header.stamp.sec, imu_msg.header.stamp.nanosec = string2timestamp(timestamps)
-        imu_msg.linear_acceleration.x = imu[0]
-        imu_msg.linear_acceleration.y = imu[1]
-        imu_msg.linear_acceleration.z = imu[2]
-        imu_msg.angular_velocity.x = imu[3]
-        imu_msg.angular_velocity.y = imu[4]
-        imu_msg.angular_velocity.z = imu[5]
+        imu_msg.header.frame_id = 'imu'
+        roll,pitch,yaw = imu[3:6]
+        
+        [w,x,y,z] = transforms3d.euler.euler2quat(roll,pitch,yaw)
+        
+        imu_msg.orientation.x = x
+        imu_msg.orientation.y = y
+        imu_msg.orientation.z = z
+        imu_msg.orientation.w = w
+        
+        imu_msg.linear_acceleration.x = imu[11]
+        imu_msg.linear_acceleration.y = imu[12]
+        imu_msg.linear_acceleration.z = imu[13]
+        imu_msg.angular_velocity.x = imu[17]
+        imu_msg.angular_velocity.y = imu[18]
+        imu_msg.angular_velocity.z = imu[19]
         pub.publish(imu_msg)
         
     def read_lidar(self,lidar_path,timestamps,pub):
@@ -116,9 +135,11 @@ class kitti2bag2(Node):
         lidar_msg.is_dense = True
         lidar_msg.data = np.asarray(lidar, dtype=np.float32).tostring()
         pub.publish(lidar_msg)
-        
+    
+    # def read_static_transform(self,):
+     
     def run(self):
-        time.sleep(1)
+        time.sleep(2)
         left_gray_dir = data_path + cameras_dir[0]
         right_gray_dir = data_path + cameras_dir[1]
         left_color_dir = data_path + cameras_dir[2]
@@ -132,10 +153,6 @@ class kitti2bag2(Node):
             left_color_timestamps_list = f.readlines()
         with open(data_path + cameras_timestamps[3],'r') as f:
             right_color_timestamps_list = f.readlines()
-        
-        
-        
-        
         
         imu_datas = data_path + imu_dir
         with open(data_path + imu_timestamps,'r') as f:
